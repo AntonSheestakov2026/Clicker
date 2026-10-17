@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101126">
+<title>Кликер: Миры</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#25245a,#101126 65%);color:#fff;font:16px system-ui,sans-serif;padding:14px}
+h1{font-size:25px;margin:4px 0 12px;text-align:center}h2{font-size:18px;margin:10px 0}
+.panel{background:#ffffff12;border:1px solid #ffffff20;border-radius:18px;padding:14px;margin:10px 0;box-shadow:0 8px 28px #0003}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#0003;border-radius:12px;padding:10px}.muted{color:#c7c8e8;font-size:13px}
+button,input{font:inherit;border:0;border-radius:12px;padding:11px}button{background:linear-gradient(135deg,#7c5cff,#24b8e6);color:white;font-weight:700;margin:4px 2px;cursor:pointer}
+button:active{transform:scale(.97)}button.secondary{background:#34365b}input{width:100%;background:#fff;color:#111;margin:5px 0}
+.coin{display:block;margin:10px auto;width:170px;height:170px;border-radius:50%;border:8px solid #ffe48a;background:radial-gradient(circle at 35% 28%,#fff9b6,#ffb72c 48%,#ad5700);box-shadow:0 0 30px #ffbd39aa,inset 0 0 18px #fff7; color:#713800;font-size:36px;font-weight:900}
+.tabs{display:flex;flex-wrap:wrap;gap:3px}.tabs button{flex:1;min-width:28%;font-size:13px;padding:9px 4px}
+.hidden{display:none}.wide{width:100%}.good{color:#80ffbd}.bad{color:#ff9999}
+</style></head>
+<body>
+<h1>⚡ КЛИКЕР: МИРЫ ⚡</h1>
+<div class="panel">
+<div class="stats">
+<div class="stat"><div class="muted">Баланс</div><strong id="money">0 ₽</strong></div>
+<div class="stat"><div class="muted">Всего кликов</div><strong id="clicks">0</strong></div>
+<div class="stat"><div class="muted">Мир</div><strong id="world">🌍 Земля</strong></div>
+<div class="stat"><div class="muted">Сила клика</div><strong id="power">1</strong></div>
+</div>
+<button class="coin" id="coin" aria-label="Кликнуть">₽</button>
+<p class="muted" style="text-align:center">Нажимай на монету, чтобы зарабатывать!</p>
+</div>
+<div class="panel"><h2>🌌 Миры</h2><div class="tabs">
+<button onclick="setWorld(0)">🌍 Земля</button><button onclick="setWorld(1)">🪐 Галактикус</button><button onclick="setWorld(2)">₿ Криптобиржа</button><button onclick="setWorld(3)">💵 Долларовый рай</button>
+</div><p id="worldInfo" class="muted"></p></div>
+<div class="panel"><h2>🛒 Магазин</h2><div class="tabs">
+<button onclick="shopTab('currency')">Валюты</button><button onclick="shopTab('power')">Сила клика</button><button onclick="shopTab('auto')">Автоклик</button><button onclick="shopTab('skins')">Скины</button><button onclick="shopTab('promo')">Промокоды</button>
+</div><div id="shopContent"></div></div>
+<div class="panel"><h2>📈 Криптобиржа</h2><p>Цена BTC: <strong id="btcPrice">1000 ₽</strong></p><p class="muted">Покупай и продавай игровую валюту. Цена меняется со временем.</p><button onclick="trade('buy')">Купить 1 BTC</button><button class="secondary" onclick="trade('sell')">Продать 1 BTC</button><p>Твои BTC: <strong id="btc">0</strong></p><p id="tradeMsg" class="muted"></p></div>
+<div class="panel"><h2>🔄 Сброс</h2><p class="muted">Сбросит прогресс на этом устройстве.</p><button class="secondary" onclick="resetGame()">Сбросить игру</button></div>
+<script>
+const defaults={money:0,clicks:0,power:1,mult:1,world:0,btc:0,btcPrice:1000,autoMs:0,autoTimer:null,skin:'₽',paradise:false,usedAnton:false,usedKlik:false};
+let s={...defaults};
+try{let old=JSON.parse(localStorage.getItem('clickerSave')||'null');if(old)s={...s,...old}}catch(e){}
+const worlds=[{name:'🌍 Земля',coin:'₽',info:'Начни свой путь на Земле.'},{name:'🪐 Галактикус',coin:'✦',info:'Космический мир с редкими монетами.'},{name:'₿ Криптобиржа',coin:'₿',info:'Мир виртуальной криптовалюты.'},{name:'💵 Долларовый рай',coin:'$',info:'Мир золотых возможностей.'}];
+function save(){try{localStorage.setItem('clickerSave',JSON.stringify({...s,autoTimer:null}))}catch(e){}}
+function fmt(n){return Math.floor(n).toLocaleString('ru-RU')}
+function render(){document.getElementById('money').textContent=fmt(s.money)+' '+worlds[s.world].coin;document.getElementById('clicks').textContent=fmt(s.clicks);document.getElementById('world').textContent=worlds[s.world].name;document.getElementById('power').textContent=fmt(s.power*s.mult);document.getElementById('coin').textContent=s.skin||worlds[s.world].coin;document.getElementById('worldInfo').textContent=worlds[s.world].info;document.getElementById('btc').textContent=fmt(s.btc);document.getElementById('btcPrice').textContent=fmt(s.btcPrice)+' ₽';save()}
+function oneClick(){s.money+=s.power;s.clicks++;if(s.clicks%10===0)s.power+=1;render()}
+document.getElementById('coin').addEventListener('click',()=>{for(let i=0;i<s.mult;i++)oneClick()});
+function setWorld(i){s.world=i;s.skin=s.paradise?'☀':worlds[i].coin;render()}
+function shopTab(t){let c=document.getElementById('shopContent');if(t==='currency')c.innerHTML='<p>Улучшение валюты увеличивает награду.</p><button onclick="buyUpgrade(50)">Улучшить валюту — 50</button>';if(t==='power')c.innerHTML='<p>Увеличь силу клика.</p><button onclick="buyUpgrade(25)">Сила клика +1 — 25</button>';if(t==='auto')c.innerHTML='<p>Автокликер приносит монеты автоматически.</p><button onclick="buyAuto(100,1000)">Автоклик 1 сек — 100</button><button onclick="buyAuto(500,500)">Автоклик 0,5 сек — 500</button><button onclick="buyAuto(1500,100)">Автоклик 0,1 сек — 1500</button><p class="muted">Текущая скорость: '+(s.autoMs?s.autoMs/1000+' сек':'выключен')+'</p>';if(t==='skins')c.innerHTML='<p>☀ Райская монета — редкий скин.</p><button onclick="buyParadise()">Купить скин — 5000 BTC</button>';if(t==='promo')c.innerHTML='<p>Введи промокод:</p><input id="promoInput" placeholder="Промокод"><button onclick="promo()">Активировать</button><p id="promoMsg" class="muted"></p>'; }
+function buyUpgrade(cost){if(s.money<cost){alert('Недостаточно монет!');return} s.money-=cost;s.power++;render();shopTab('power')}
+function buyAuto(cost,ms){if(s.money<cost){alert('Недостаточно монет!');return}s.money-=cost;s.autoMs=ms;if(s.autoTimer)clearInterval(s.autoTimer);s.autoTimer=setInterval(()=>{s.money+=s.power;s.clicks++;render()},ms);render();shopTab('auto')}
+function buyParadise(){if(s.btc<5000){alert('Нужно 5000 BTC!');return}s.btc-=5000;s.paradise=true;s.skin='☀';render();shopTab('skins')}
+function promo(){let v=(document.getElementById('promoInput').value||'').trim().toLowerCase(),m=document.getElementById('promoMsg');if(v==='anton'){if(s.usedAnton){m.textContent='Этот код уже использован.';return}s.usedAnton=true;s.paradise=true;s.skin='☀';m.textContent='Райская монета разблокирована бесплатно!'}else if(v==='klik'){if(s.usedKlik){m.textContent='Этот код уже использован.';return}s.usedKlik=true;s.mult=5;m.textContent='Активировано! Каждый тап считается за 5 кликов.'}else{m.textContent='Неверный промокод.';return}m.className='muted good';render()}
+function trade(kind){if(kind==='buy'){if(s.money<s.btcPrice){document.getElementById('tradeMsg').textContent='Недостаточно монет.';return}s.money-=s.btcPrice;s.btc++}else{if(s.btc<1){document.getElementById('tradeMsg').textContent='Нет BTC для продажи.';return}s.btc--;s.money+=s.btcPrice}document.getElementById('tradeMsg').textContent='Операция выполнена.';render()}
+setInterval(()=>{s.btcPrice=Math.max(100,Math.round(s.btcPrice*(0.9+Math.random()*0.2)));render()},10000);
+function resetGame(){if(!confirm('Точно сбросить весь прогресс?'))return;if(s.autoTimer)clearInterval(s.autoTimer);localStorage.removeItem('clickerSave');s={...defaults};render();shopTab('currency')}
+render();shopTab('currency');if(s.autoMs)buyAuto(0,s.autoMs);
+</script></body></html>
